@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <!-- Bootstrap -->
+    <link
+      rel="stylesheet"
+      href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css"
+    />
+    <link
+      href="https://fonts.googleapis.com/css?family=Voltaire"
+      rel="stylesheet"
+      type="text/css"
+    />
+
+    <link rel="stylesheet" href="./css/main.css" />
+
+    <!-- JQuery -->
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+    <!-- Ractive -->
+    <script src="https://cdn.jsdelivr.net/npm/ractive"></script>
+    <script src="./js/guid.js"></script>
+    <!-- A bit of style -->
+    <style>
+      body {
+        background-color: #eee;
+        min-height: 100%;
+        font-family: Voltaire;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="target" class="container"></div>
+  </body>
+</html>
+
+<script id="areas_save_template" type="text/ractive">
+  <form id="np_area_savearea">
+      <div class="row">
+          <div class="col-xs-12">
+              <div class="form-group textfield required">
+                  <label for="np_area_txtName">Nombre del área</label>
+                  <input type="text" class="form-control" id="np_area_txtName" name="np_area_txtName" value="{{Name}}"
+                         autocomplete="off" maxlength="100">
+              </div>
+          </div>
+      </div>
+  </form>
+  <div class="row p-t-20">
+      <div class="col-xs-6">
+          <button id="np_btnCancelSaveArea" class="btn btn-white full-width">Cancelar</button>
+      </div>
+
+      <div class="col-xs-6">
+          <button id="np_btnSaveArea" class="btn btn-primary full-width">Guardar</button>
+      </div>
+  </div>
+</script>
+
+<script id="full_template" type="text/ractive">
+
+  <div class="row p-t-20">
+      <div class="col-xs-6">
+          <button id="np_btnOpenModal" class="btn btn-primary full-width">Guardar</button>
+      </div>
+  </div>
+</script>
+
+<script type="text/javascript">
+  var ractive = new Ractive({
+    target: "#target",
+    template: "#full_template",
+    data: {
+      ID: null,
+      Name: "",
+    },
+  });
+
+  let containerID = "areas_save_wrapper";
+
+  //Save button
+  $("#np_btnOpenModal").on("click", function () {
+    let modalID = OpenCentralModal(
+      "Título",
+      "s",
+      '<div id="areas_save_wrapper"></div>',
+      function () {
+        let $container = $("#" + containerID);
+
+        var ractive = new Ractive({
+          target: "#areas_save_wrapper",
+          template: "#areas_save_template",
+          data: {
+            ID: null,
+            Name: "",
+          },
+        });
+
+        $("#np_btnCancelSaveArea").on("click", function () {
+          CloseModal(modalID);
+        });
+      }
+    );
+  });
+
+  CloseModal = function (modalID) {
+    let modal = $("#" + modalID);
+    modal.removeClass("animated bounceIn").addClass("animated bounceOut");
+    $(modal.closest(".modal-main-container")).fadeOut(400, function () {
+      $(this).remove();
+    });
+  };
+
+  OpenCentralModal = function (title, size, html, callback, onClose) {
+    if (size === undefined) {
+      size = "medium";
+    } else if (size === "s") {
+      size = "small";
+    } else if (size === "m") {
+      size = "medium";
+    } else if (size === "xm") {
+      size = "x-medium";
+    } else if (size === "l") {
+      size = "large";
+    } else {
+      size = "medium";
+    }
+
+    //Generate the unique ID
+    var guid = Guid.create().value;
+    var modalID = "centralmodal_" + guid;
+
+    container = "body";
+
+    $(container).append(
+      "<div class='modal-main-container " +
+        guid +
+        "'><div class='side-modal-wrapper'></div></div>"
+    );
+    container =
+      container +
+      " > .modal-main-container." +
+      guid +
+      " >" +
+      ".side-modal-wrapper";
+
+    //Add the backdrop and the modal
+    $(container).append(
+      "<div class='side-modal-container " +
+        size +
+        "' id='" +
+        modalID +
+        "'>" +
+        "<div class='title'>" +
+        "<label>" +
+        title +
+        "</label>" +
+        "<a href='#'><i class='fas fa-times'></i></a>" +
+        "</div>" +
+        "<div class='body'> " +
+        html +
+        "</div>" +
+        "</div>"
+    );
+
+    //Hide them :)
+    $(container + " > .side-modal-container").hide();
+
+    //Animate them
+    var delay = 250;
+    $(container + " > .side-modal-container")
+      .show()
+      .fadeIn(100)
+      .addClass("animated bounceIn");
+
+    //Set close behavior
+    $(container + " > .side-modal-container > .title > a").on(
+      "click",
+      function (ev) {
+        UX.Modals.CheckIfCanClose(modalID, onClose);
+      }
+    );
+
+    //Lets make a little pause to call the callback
+    setTimeout(function () {
+      //If there is a callbak, then call it
+      if (callback !== undefined && callback !== null) {
+        callback.call();
+      }
+    }, 25);
+
+    return modalID;
+  };
+</script>
